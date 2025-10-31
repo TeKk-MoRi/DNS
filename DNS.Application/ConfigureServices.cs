@@ -19,5 +19,5 @@ public static class ConfigureServices
 
         //  services.AddScoped<IAuthenticationService, AuthenticationService>();
         return services;
-    }
+    } 
 }
