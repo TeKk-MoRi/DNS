@@ -1,16 +1,18 @@
-﻿using DNS.Presentation;
+﻿using DNS.Infrastructure.Authentication;
+using DNS.Presentation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
-
 #region Auth
+var keycloakConfig = builder.Configuration.GetSection("Keycloak").Get<KeycloakConfig>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "http://localhost:8081/realms/dnsforyou";
+        options.Authority = $"{keycloakConfig.Authority}/realms/{keycloakConfig.Realm}";
         options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
             ValidateAudience = false, // ignore 'aud' claim
@@ -64,7 +66,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddControllers();
 builder.Services.RegisterApplicationServices()
-                .RegisterInfrastructureServices()
+                .RegisterInfrastructureServices(builder.Configuration)
                 .RegisterPersistenceServices(builder.Configuration)
                 .RegisterPresentationServices();
 
