@@ -19,6 +19,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
         options.RequireHttpsMetadata = false; // dev only
     });
+
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireAssertion(context =>
+            context.User.IsInRole("admin") ||
+            context.User.HasClaim(c => c.Type == "realm-management" && c.Value == "realm-admin")));
+});
 #endregion
 
 

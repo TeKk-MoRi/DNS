@@ -16,6 +16,7 @@ namespace DNS.Presentation.Controllers
 
 
         [HttpGet]
+        [Authorize(Roles = "AdminOnly")]
         public async Task<ActionResult<Result<List<KeycloakRoleDto>>>> GetAllRoles()
         {
             Result<List<KeycloakRoleDto>> result = await _keycloakService.GetRealmRolesAsync();
@@ -27,7 +28,7 @@ namespace DNS.Presentation.Controllers
         }
 
         [HttpPost("{userId}")]
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "AdminOnly")]
         public async Task<ActionResult<Result>> AssignRoles(string userId, [FromBody] AssignRolesRequest request)
         {
             Result<bool> result = await _keycloakService.AssignRolesAsync(userId, request.Roles);
@@ -39,7 +40,7 @@ namespace DNS.Presentation.Controllers
         }
 
         [HttpDelete("{userId}")]
-        [Authorize(Roles = "admin")]
+        [Authorize(Roles = "AdminOnly")]
         public async Task<ActionResult<Result>> RemoveRoles(string userId, [FromBody] RemoveRolesRequest request)
         {
             Result<bool> result = await _keycloakService.RemoveRolesAsync(userId, request.Roles);
