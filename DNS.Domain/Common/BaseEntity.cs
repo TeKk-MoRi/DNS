@@ -1,6 +1,20 @@
-﻿namespace DNS.Domain.Common;
+﻿using DNS.Domain.Common.Events;
 
-public abstract class BaseEntity
+namespace DNS.Domain.Common;
+
+public abstract class Entity
 {
-    public Guid Id { get; set; }
+    private readonly List<IDomainEvent> _domainEvents = new();
+
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+    protected void AddDomainEvent(IDomainEvent eventItem)
+    {
+        _domainEvents.Add(eventItem);
+    }
+
+    public void ClearDomainEvents()
+    {
+        _domainEvents.Clear();
+    }
 }

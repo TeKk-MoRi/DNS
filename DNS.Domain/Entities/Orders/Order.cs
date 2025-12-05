@@ -1,4 +1,5 @@
-﻿using DNS.Domain.Entities.Orders;
+﻿using DNS.Domain.Common.Events.Orders;
+using DNS.Domain.Entities.Orders;
 using DNS.Domain.Enums.Orders;
 using DNS.Domain.Exceptions;
 using DNS.Domain.ValueObjects.Orders;
@@ -6,7 +7,7 @@ using Address = DNS.Domain.ValueObjects.Orders.Address;
 
 namespace DNS.Domain.Entities.Orders;
 
-public class Order
+public class Order : Entity
 {
     // -----------------------------
     // EF Core requirements
@@ -118,6 +119,8 @@ public class Order
             throw new DomainException("Cannot place an empty order.");
 
         Status = OrderStatus.Placed;
+
+        AddDomainEvent(new OrderPlacedEvent(Id));
     }
 
     // -----------------------------
@@ -129,6 +132,8 @@ public class Order
             throw new DomainException("Only placed orders can be paid.");
 
         Status = OrderStatus.Paid;
+
+        AddDomainEvent(new OrderPaidEvent(Id));
     }
 
     // -----------------------------
