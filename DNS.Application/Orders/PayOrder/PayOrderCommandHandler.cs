@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.PayOrder
+namespace DNS.Application.Orders.PayOrder
 {
     public class PayOrderCommandHandler
         : IRequestHandler<PayOrderCommand>

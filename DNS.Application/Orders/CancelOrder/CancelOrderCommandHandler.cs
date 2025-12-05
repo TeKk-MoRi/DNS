@@ -1,11 +1,12 @@
-﻿using DNS.Domain.Entities.Orders;
+﻿using DNS.Application.Common.Exceptions;
+using DNS.Domain.Entities.Orders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.CancelOrder
+namespace DNS.Application.Orders.CancelOrder
 {
     public class CancelOrderCommandHandler
         : IRequestHandler<CancelOrderCommand>

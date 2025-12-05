@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.CancelOrder
+namespace DNS.Application.Orders.PlaceOrder
 {
-    public class CancelOrderCommandValidator
-        : AbstractValidator<CancelOrderCommand>
+    public class PlaceOrderCommandValidator
+        : AbstractValidator<PlaceOrderCommand>
     {
-        public CancelOrderCommandValidator()
+        public PlaceOrderCommandValidator()
         {
             RuleFor(x => x.OrderId).NotEmpty();
         }

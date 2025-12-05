@@ -1,11 +1,12 @@
-﻿using DNS.Domain.Entities.Orders;
+﻿using DNS.Application.Common.Exceptions;
+using DNS.Domain.Entities.Orders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.PlaceOrder
+namespace DNS.Application.Orders.PlaceOrder
 {
     public class PlaceOrderCommandHandler
         : IRequestHandler<PlaceOrderCommand>
@@ -22,7 +23,7 @@ namespace DNS.Application.Users.Commands.Orders.PlaceOrder
             var order = await _uow.Orders.FindAsync(new OrderId(request.OrderId));
 
             if (order == null)
-                throw new Exception("Order not found");
+                throw new NotFoundException(nameof(Order), request.OrderId);
 
             order.Place();
 

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.CreateOrderLine
+namespace DNS.Application.Orders.CreateOrderLine
 {
     public class AddOrderLineCommandValidator
         : AbstractValidator<AddOrderLineCommand>

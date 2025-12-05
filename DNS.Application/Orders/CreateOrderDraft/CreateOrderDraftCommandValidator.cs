@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.CreateOrderDraft
+namespace DNS.Application.Orders.CreateOrderDraft
 {
     public class CreateOrderDraftCommandValidator
         : AbstractValidator<CreateOrderDraftCommand>

@@ -11,9 +11,11 @@ public class CatchExceptionFilterAttribute : ExceptionFilterAttribute
     public CatchExceptionFilterAttribute()
     {
         _exceptionHandlers = new Dictionary<Type, Action<ExceptionContext>>
-            {
-                { typeof(ValidationException), HandleValidationException },
-            };
+{
+    { typeof(ValidationException), HandleValidationException },
+    { typeof(NotFoundException), HandleNotFoundException }
+};
+
     }
 
     private void HandleException(ExceptionContext context)
@@ -25,6 +27,22 @@ public class CatchExceptionFilterAttribute : ExceptionFilterAttribute
             return;
         }
     }
+
+    private void HandleNotFoundException(ExceptionContext context)
+    {
+        var exception = (NotFoundException)context.Exception;
+
+        var details = new ProblemDetails
+        {
+            Title = "Resource Not Found",
+            Detail = exception.Message,
+            Status = StatusCodes.Status404NotFound
+        };
+
+        context.Result = new NotFoundObjectResult(details);
+        context.ExceptionHandled = true;
+    }
+
 
     private void HandleValidationException(ExceptionContext context)
     {

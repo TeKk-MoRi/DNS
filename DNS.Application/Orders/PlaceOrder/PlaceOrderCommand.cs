@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.PayOrder
+namespace DNS.Application.Orders.PlaceOrder
 {
-    public record PayOrderCommand(Guid OrderId) : IRequest;
+    public record PlaceOrderCommand(Guid OrderId) : IRequest;
 }

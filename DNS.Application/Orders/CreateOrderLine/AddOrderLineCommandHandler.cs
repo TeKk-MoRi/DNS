@@ -1,4 +1,5 @@
-﻿using DNS.Domain.Entities.Orders;
+﻿using DNS.Application.Common.Exceptions;
+using DNS.Domain.Entities.Orders;
 using DNS.Domain.ValueObjects.Orders;
 using System;
 using System.Collections.Generic;
@@ -6,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.CreateOrderLine
+namespace DNS.Application.Orders.CreateOrderLine
 {
     public class AddOrderLineCommandHandler
         : IRequestHandler<AddOrderLineCommand>
@@ -25,7 +26,7 @@ namespace DNS.Application.Users.Commands.Orders.CreateOrderLine
                 .FirstOrDefaultAsync(o => o.Id == new OrderId(request.OrderId), cancellationToken);
 
             if (order == null)
-                throw new Exception("Order not found");
+                throw new NotFoundException(nameof(Order), request.OrderId);
 
             order.AddLine(
                 new ProductId(request.ProductId),

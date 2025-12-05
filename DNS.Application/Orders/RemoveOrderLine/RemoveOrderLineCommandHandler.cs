@@ -1,11 +1,12 @@
-﻿using DNS.Domain.Entities.Orders;
+﻿using DNS.Application.Common.Exceptions;
+using DNS.Domain.Entities.Orders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DNS.Application.Users.Commands.Orders.RemoveOrderLine
+namespace DNS.Application.Orders.RemoveOrderLine
 {
     public class RemoveOrderLineCommandHandler
         : IRequestHandler<RemoveOrderLineCommand>
@@ -24,7 +25,7 @@ namespace DNS.Application.Users.Commands.Orders.RemoveOrderLine
                 .FirstOrDefaultAsync(o => o.Id == new OrderId(request.OrderId), cancellationToken);
 
             if (order == null)
-                throw new Exception("Order not found");
+                throw new NotFoundException(nameof(Order), request.OrderId);
 
             order.RemoveLine(request.LineNumber);
 
