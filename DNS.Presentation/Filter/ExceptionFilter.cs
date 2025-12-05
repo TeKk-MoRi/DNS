@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using DNS.Application.Common.Exceptions;
+using DNS.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using DNS.Application.Common.Exceptions;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace DNS.Presentation.Filter;
 
@@ -13,7 +14,8 @@ public class CatchExceptionFilterAttribute : ExceptionFilterAttribute
         _exceptionHandlers = new Dictionary<Type, Action<ExceptionContext>>
 {
     { typeof(ValidationException), HandleValidationException },
-    { typeof(NotFoundException), HandleNotFoundException }
+    { typeof(NotFoundException), HandleNotFoundException },
+    { typeof(DomainException), HandleDomainException }
 };
 
     }
@@ -27,6 +29,23 @@ public class CatchExceptionFilterAttribute : ExceptionFilterAttribute
             return;
         }
     }
+
+
+    private void HandleDomainException(ExceptionContext context)
+    {
+        var exception = (DomainException)context.Exception;
+
+        var details = new ProblemDetails
+        {
+            Title = "Domain rule violation",
+            Detail = exception.Message,
+            Status = StatusCodes.Status400BadRequest
+        };
+
+        context.Result = new BadRequestObjectResult(details);
+        context.ExceptionHandled = true;
+    }
+
 
     private void HandleNotFoundException(ExceptionContext context)
     {

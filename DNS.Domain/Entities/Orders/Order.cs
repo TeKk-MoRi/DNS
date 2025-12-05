@@ -1,109 +1,144 @@
 ﻿using DNS.Domain.Entities.Orders;
 using DNS.Domain.Enums.Orders;
+using DNS.Domain.Exceptions;
 using DNS.Domain.ValueObjects.Orders;
+using Address = DNS.Domain.ValueObjects.Orders.Address;
 
 namespace DNS.Domain.Entities.Orders;
 
-public class Order 
+public class Order
 {
+    // -----------------------------
+    // EF Core requirements
+    // -----------------------------
+    private Order() { }  // For EF Core
+
+    // Backing field for OrderLines
     private readonly List<OrderLine> _lines = new();
 
+    // -----------------------------
+    // Aggregate Root Properties
+    // -----------------------------
     public OrderId Id { get; private set; }
     public CustomerId CustomerId { get; private set; }
-    public ValueObjects.Orders.Address ShippingAddress { get; private set; }
+    public Address Address { get; private set; }
     public OrderStatus Status { get; private set; }
 
+    // Read-only access for outside world
     public IReadOnlyCollection<OrderLine> Lines => _lines.AsReadOnly();
 
-    // Compute total dynamically
-    public Money Total => _lines.Count == 0
-        ? Money.Zero("USD")
-        : _lines.Select(l => l.SubTotal)
-                .Aggregate((a, b) => a + b);
+    // Derived property (not mapped)
+    public Money Total =>
+        _lines.Count == 0
+            ? Money.Zero("USD")
+            : _lines.Select(l => l.SubTotal)
+                    .Aggregate((a, b) => a + b);
 
-    private Order() { } // For EF Core later
-
-    private Order(OrderId id, CustomerId customerId, ValueObjects.Orders.Address shippingAddress)
+    // -----------------------------
+    // Constructor used by static factory
+    // -----------------------------
+    private Order(
+        OrderId id,
+        CustomerId customerId,
+        Address address)
     {
         Id = id;
-        CustomerId = customerId;
-        ShippingAddress = shippingAddress;
+        CustomerId = customerId ?? throw new ArgumentNullException(nameof(customerId));
+        Address = address ?? throw new ArgumentNullException(nameof(address));
         Status = OrderStatus.Draft;
     }
 
-    public static Order CreateDraft(CustomerId customerId, ValueObjects.Orders.Address shippingAddress)
-        => new Order(OrderId.New(), customerId, shippingAddress);
-
-    // ------------------------------
-    // BUSINESS BEHAVIOR (IMPORTANT)
-    // ------------------------------
-
-    public void AddLine(ProductId productId, string productName, int quantity, Money unitPrice)
+    // -----------------------------
+    // Factory Method (Always preferred for aggregates)
+    // -----------------------------
+    public static Order CreateDraft(CustomerId customerId, Address address)
     {
-        EnsureDraft();
+        var newOrderId = new OrderId(Guid.NewGuid());
 
-        if (quantity <= 0)
-            throw new ArgumentOutOfRangeException(nameof(quantity));
-
-        var existing = _lines.SingleOrDefault(x => x.ProductId == productId);
-
-        if (existing is null)
-        {
-            _lines.Add(new OrderLine(
-                lineNumber: _lines.Count + 1,
-                productId,
-                productName,
-                quantity,
-                unitPrice));
-        }
-        else
-        {
-            existing.IncreaseQuantity(quantity);
-        }
+        return new Order(newOrderId, customerId, address);
     }
 
+    // -----------------------------
+    // ADD LINE
+    // -----------------------------
+    public void AddLine(
+        ProductId productId,
+        string productName,
+        int quantity,
+        Money unitPrice)
+    {
+        if (Status != OrderStatus.Draft)
+            throw new DomainException("Cannot modify order lines after placing the order.");
+
+        var existing = _lines.FirstOrDefault(l => l.ProductId == productId);
+
+        if (existing is not null)
+        {
+            existing.IncreaseQuantity(quantity);
+            return;
+        }
+
+        var lineNumber = _lines.Count + 1;
+
+        var orderLine = new OrderLine(
+            Id,
+            lineNumber,
+            productId,
+            productName,
+            quantity,
+            unitPrice);
+
+        _lines.Add(orderLine);
+    }
+
+    // -----------------------------
+    // REMOVE LINE
+    // -----------------------------
     public void RemoveLine(int lineNumber)
     {
-        EnsureDraft();
+        if (Status != OrderStatus.Draft)
+            throw new DomainException("Cannot modify order lines after placing the order.");
 
-        var line = _lines.SingleOrDefault(l => l.LineNumber == lineNumber)
-                   ?? throw new InvalidOperationException("Line not found.");
+        var line = _lines.FirstOrDefault(l => l.LineNumber == lineNumber);
+        if (line is null)
+            throw new DomainException($"Order line {lineNumber} does not exist.");
 
         _lines.Remove(line);
     }
 
+    // -----------------------------
+    // PLACE ORDER
+    // -----------------------------
     public void Place()
     {
-        EnsureDraft();
+        if (Status != OrderStatus.Draft)
+            throw new DomainException("Only draft orders can be placed.");
 
-        if (!_lines.Any())
-            throw new InvalidOperationException("Cannot place an empty order.");
+        if (_lines.Count == 0)
+            throw new DomainException("Cannot place an empty order.");
 
         Status = OrderStatus.Placed;
-        // Raise domain event OrderPlacedEvent here (later)
     }
 
+    // -----------------------------
+    // MARK AS PAID
+    // -----------------------------
     public void MarkAsPaid()
     {
         if (Status != OrderStatus.Placed)
-            throw new InvalidOperationException("Order must be Placed before Paid.");
+            throw new DomainException("Only placed orders can be paid.");
 
         Status = OrderStatus.Paid;
-        // Raise OrderPaidEvent
     }
 
+    // -----------------------------
+    // CANCEL ORDER
+    // -----------------------------
     public void Cancel()
     {
         if (Status == OrderStatus.Paid)
-            throw new InvalidOperationException("Cannot cancel a paid order.");
+            throw new DomainException("Paid orders cannot be canceled.");
 
         Status = OrderStatus.Cancelled;
-        // Raise OrderCancelledEvent
-    }
-
-    private void EnsureDraft()
-    {
-        if (Status != OrderStatus.Draft)
-            throw new InvalidOperationException("Only Draft orders may be modified.");
     }
 }
